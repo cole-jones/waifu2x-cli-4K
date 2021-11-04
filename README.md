@@ -10,6 +10,7 @@ I might work on this later and add more parameters. I also might not.
 
 ## Dependencies
 - [NodeJS](https://nodejs.org/)
+- [Tenpi/waifu2x](https://github.com/Tenpi/waifu2x)
 - [image-size](https://www.npmjs.com/package/image-size)
 
 
