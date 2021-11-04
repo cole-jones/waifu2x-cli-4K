@@ -36,6 +36,9 @@ const prep_files = () => {
 
 	files_to_upscale = [];
 
+	// Flag for displaying message for moving images that are already 4K
+	moved_4k = 0;
+
 	// Print folder paths
 	console.log("");
 	console.log(`   Upscaling files from      \"${folder_to_upscale}\"`);
@@ -64,9 +67,15 @@ const prep_files = () => {
 
 			// If width or height already >= 4K, just move the file to the save_folder
 			if (height >= 2160 || width >= 3840) {
+				if (moved_4k === 0)
+					process.stdout.write("Copying images that are already 4K...");
+
+				// Increment counter
+				moved_4k += 1;
+
 				// Copy the file to save_folder
 				fs.copyFileSync(file_path, new_path);
-				
+
 				// Delete the file from folder_to_upscale
 				fs.unlinkSync(file_path);
 			}
@@ -83,6 +92,9 @@ const prep_files = () => {
 			}
 		}
 	});
+
+	if (moved_4k > 0)
+		console.log(`  ${moved_4k} images moved!\n`);
 
 	// Return array of file objects
 	return files_to_upscale;
