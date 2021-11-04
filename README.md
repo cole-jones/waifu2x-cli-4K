@@ -1,7 +1,7 @@
 # waifu2x-cli-4k
-A simple CLI tool to upscale a folder of images to 4K using waifu2x.
+A simple CLI tool to upscale a folder of images to 4K using waifu2x. It's hacky but it works<sup>tm</sup>.
 
-It's hacky but it works<sup>tm</sup>.
+Not for use with folders that contain sub-directories (flat folders of images only, sorry).
 
 I might work on this later and add more parameters. I also might not.
 
