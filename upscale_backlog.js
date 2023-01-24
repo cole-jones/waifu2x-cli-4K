@@ -11,28 +11,38 @@ const progress = (current, total) => {
 async function upscale_images(files) {
 	for (let i = 0; i < files.length; i++) {
 		let file_path = files[i].file_path;
+		let original_file = files[i].original_file;
 		let new_path = files[i].new_path;
 		let img_scale = files[i].img_scale;
 		
 		progress(i + 1, files.length);
 		await waifu2x.default.upscaleImage(file_path, new_path, { noise: 1, scale: img_scale })
 							 .then(() => {
+								/// Sometimes images don't actually get upscaled for some reason.
+								/// Instead of deleting the files, move them to a trash file.
 								// Delete the file from folder_to_upscale
-								fs.unlinkSync(file_path);
+								//fs.unlinkSync(file_path);
+								try {
+									fs.copyFileSync(file_path, "C:\\upscale_trash\\" + original_file);
+									fs.unlinkSync(file_path);
+								} catch (error) {
+									console.error(error)
+								}
 							 });
 	}
 };
 
 const prep_files = () => {
 	// Make sure there's enough arguments
-	if (process.argv.length > 4) {
+	if (process.argv.length > 5) {
 		console.log("Too many arguments!");
 		return 0;
 	}
 
-	// Get folder that contains files to upscale, folder in which to save upscaled images
+	// Get folder that contains files to upscale, folder in which to save upscaled images, optional name of artist
 	let folder_to_upscale = process.argv[2];
 	let save_folder = process.argv[3];
+	let artist = process.argv[4];
 
 	files_to_upscale = [];
 
@@ -46,7 +56,11 @@ const prep_files = () => {
 	console.log("");
 
 	// Get all names of files in folder_to_upscale
-	let file_names = fs.readdirSync(folder_to_upscale)
+	let file_names = fs.readdirSync(folder_to_upscale);
+
+	// If an artist was specified, only get files for that artist
+	if (artist)
+		file_names = file_names.filter(f => f.includes(`${artist}_`));
 
 	// Run through all files in the folder
 	file_names.forEach((filename) => {
@@ -54,6 +68,8 @@ const prep_files = () => {
 		if (!filename.includes('.ini')) {
 			// Change new image type to .png
 			let last_dot = filename.lastIndexOf('.');
+			let last_slash = filename.lastIndexOf('\\');
+			let original_file = filename.substr(last_slash + 1)
 			let png_file = filename.substr(0, last_dot) + '.png';
 			
 			// Get old and new filepaths
@@ -61,7 +77,13 @@ const prep_files = () => {
 			let new_path = save_folder + "\\" + png_file;
 
 			// Get height and width of image
-			let dimensions = sizeOf(file_path);
+			let dimensions = 0
+			try {
+				dimensions = sizeOf(file_path);
+			} catch {
+				console.log(`!!! ${filename} corrupted!`);
+				return 0;
+			}
 			let height = dimensions.height;
 			let width = dimensions.width;
 
@@ -88,7 +110,7 @@ const prep_files = () => {
 				let img_scale = height_scale < width_scale ? height_scale : width_scale;
 
 				// Add file paths/img_scale object to array
-				files_to_upscale.push({ img_scale: img_scale, file_path: file_path, new_path: new_path });
+				files_to_upscale.push({ img_scale: img_scale, file_path: file_path, new_path: new_path, original_file: original_file });
 			}
 		}
 	});
